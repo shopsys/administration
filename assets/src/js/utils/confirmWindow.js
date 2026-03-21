@@ -10,13 +10,45 @@ export default class ConfirmWindow {
             const style = $element.data('confirm-style') || 'danger';
             const content = $element.data('confirm-message') || '';
             const continueUrl = $element.data('confirm-continue-url') || $element.attr('href') || '#';
+            const continueEvent = ConfirmWindow.resolveContinueEvent($element, continueUrl);
 
             ConfirmWindow.show({
                 content,
                 style,
                 continueUrl,
+                continueEvent,
             });
         });
+    }
+
+    static resolveContinueEvent($element, continueUrl) {
+        if (continueUrl !== '#') {
+            return null;
+        }
+
+        const form = $element.closest('form').get(0);
+        const submitElement = $element.get(0);
+
+        if (!form || !submitElement || !ConfirmWindow.isSubmitElement(submitElement)) {
+            return null;
+        }
+
+        return () => {
+            if (typeof form.requestSubmit === 'function') {
+                form.requestSubmit(submitElement);
+
+                return;
+            }
+
+            form.submit();
+        };
+    }
+
+    static isSubmitElement(element) {
+        return (
+            (element.tagName === 'BUTTON' && (element.type === 'submit' || element.type === '')) ||
+            (element.tagName === 'INPUT' && element.type === 'submit')
+        );
     }
 
     /**
